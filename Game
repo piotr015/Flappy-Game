@@ -1,0 +1,151 @@
+from tkinter import *
+import random
+
+
+
+tk = Tk()
+tk.resizable(width=False, height=False)
+#tk.geometry("500x500")
+
+FRAMERATE = 20
+game = True
+sc = -1
+x1, y1, x2, y2 = 200, 200, 220, 220
+px = 500
+py = 0
+up_count =0
+
+
+c= Canvas(tk, width = 500, height = 500, bg = "#57e1ed")
+c.pack()
+flappy = c.create_oval(x1, y1, x2, y2, fill = "red")
+pipeUp = c.create_rectangle(px, 0, px+40, py,  fill = "#00ff00", outline = "#00ff00")
+pipeDown = c. create_rectangle(px, py+150, px+40, 500, fill = "#00ff00", outline = "#00ff00")
+scores = c.create_text(40,20, font = ('Arial', 15), fill = "white", text = "Score "+str(sc) )
+endPage = None
+endScore = None
+
+def flappyDown():
+    global game
+    global y1, y2
+    y1 += 8
+    y2 += 8
+
+    if y1>=500 or y2 >=500:
+        y1 = 480
+        y2 = 500
+    c.coords(flappy, x1, y1, x2, y2)
+    if game == True:
+        tk.after(FRAMERATE, flappyDown)
+
+def flappyUp(event=None):
+    global game
+    global y1, y2
+    global up_count
+    if game == True:
+        y1 -= 20
+        y2 -= 20
+        if y1<=0 or y2<=0:
+            y1 = 0
+            y2 =20
+        c.coords(flappy, x1, y1, x2, y2)
+        if up_count < 5:
+            up_count += 1
+            tk.after(FRAMERATE, flappyUp)
+        else:
+            up_count = 0
+    if game == False:
+        reset()
+
+def pipes():
+    global scores
+    global sc
+    global game
+    global px
+    global py
+    sc+=1
+    c.itemconfig(scores, text = "Score "+str(sc))
+
+    if px>0:
+        hgh = random.randint(50, 350)
+        py = hgh
+        c.coords(pipeUp, px, 0, px+40, py )
+        c.coords(pipeDown, px, py + 150, px + 40, 500)
+
+        if game == True:
+            movePipes()
+
+
+
+def movePipes():
+
+    global px
+    global py
+    global game
+    if px>0:
+        px-=3
+
+        c.coords(pipeUp, px, 0, px+40, py)
+        c.coords(pipeDown, px, py + 150, px + 40, 500)
+        if game == True:
+            tk.after(FRAMERATE, movePipes)
+    else:
+        px = 500
+        py = 0
+        if game == True:
+            pipes()
+def end():
+    global endPage
+    global endScore
+    global sc
+    endPage = c. create_rectangle(0, 0, 500, 500, fill = "#00ff00", outline = "#00ff00")
+    endScore = c.create_text(250, 235, font=('Arial', 30), fill="white", text="Your score is\n         " + str(sc))
+
+def collision():
+    global game
+    global x1
+    global x2
+    global y1
+    global y2
+    global px
+    global py
+    #print("    px = ", px, " \npy = ", py, "\nx1 = ", x1, "\nx2 = ", x2, "\ny1 = ", y1, "\ny2 = ", y2)
+    if ((x2==px-1 and(y1<=py or y2>=py+150)) or (x1>=px and x2<=px+40 and (y1<=py or y2>=py+150)) or y2>=500) :
+        game = False
+        end()
+    if game == True:
+        tk.after(FRAMERATE, collision)
+
+
+
+def reset():
+    global game
+    global sc
+    global x
+    global x1
+    global x2
+    global y1
+    global y2
+    global px
+    global py
+    global up_count
+    global endPage
+    game = True
+    sc = -1
+    x1, y1, x2, y2 = 200, 200, 220, 220
+    px = 500
+    py = 0
+    up_count = 0
+    pipes()
+    flappyDown()
+    collision()
+    c.delete(endPage)
+    c.delete((endScore))
+
+
+
+tk.after(FRAMERATE, pipes)
+tk.after(FRAMERATE, flappyDown)
+tk.bind("<space>", flappyUp)
+tk.after(FRAMERATE, collision)
+tk.mainloop()
